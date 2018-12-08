@@ -7,9 +7,14 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{EC0D0513-7D8
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "test", "test", "{930EC4F2-6375-4A9A-8E19-D9FC480F6FEF}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IntegrationTest", "test\IntegrationTest\IntegrationTest.csproj", "{F13C9D7E-6685-480B-95AE-A47C7A09E14B}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "IntegrationTest", "test\IntegrationTest\IntegrationTest.csproj", "{F13C9D7E-6685-480B-95AE-A47C7A09E14B}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DotNetDevOps.ServiceFabric.Hosting", "src\DotNetDevOps.ServiceFabric.Hosting\DotNetDevOps.ServiceFabric.Hosting.csproj", "{55B8077F-17AC-42BC-9CBB-BF499255551C}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DotNetDevOps.ServiceFabric.Hosting", "src\DotNetDevOps.ServiceFabric.Hosting\DotNetDevOps.ServiceFabric.Hosting.csproj", "{55B8077F-17AC-42BC-9CBB-BF499255551C}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{1C1B1CBE-DD9F-4B83-B682-77B6C71724BA}"
+	ProjectSection(SolutionItems) = preProject
+		README.md = README.md
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
