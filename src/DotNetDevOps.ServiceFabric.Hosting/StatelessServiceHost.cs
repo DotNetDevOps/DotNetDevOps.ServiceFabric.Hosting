@@ -10,8 +10,27 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace DotNetDevOps.ServiceFabric.Hosting
 {
+    public abstract class ServiceHost<TService>: BackgroundService
+    {
+        protected ILifetimeScope MakeServiceContainer<T>(ILifetimeScope container, T context, Action<ContainerBuilder> scopeRegistrations = null) where T : ServiceContext
+        {
+
+            var child = container.IntializeScope(builder =>
+            {
+                builder.RegisterType<TService>().AsSelf();
+                builder.RegisterInstance(context).ExternallyOwned().As<ServiceContext>().AsSelf();
+
+                builder.RegisterInstance(context.CodePackageActivationContext).ExternallyOwned().AsSelf();
+                scopeRegistrations?.Invoke(builder);
+            });
+
+
+
+            return child;
+        }
+    }
     public class StatelessServiceHost<TStatelessService>
-        : BackgroundService
+        : ServiceHost<TStatelessService>
         where TStatelessService : StatelessService
     {
         private string serviceTypeName;
@@ -31,21 +50,7 @@ namespace DotNetDevOps.ServiceFabric.Hosting
             this.scopedRegistrations = scopedRegistrations;
         }
 
-        private static ILifetimeScope MakeServiceContainer<T>(ILifetimeScope container, T context, Action<ContainerBuilder> scopeRegistrations = null) where T : ServiceContext
-        {
-
-            var child = container.IntializeScope(builder =>
-            {
-                builder.RegisterInstance(context).ExternallyOwned().As<ServiceContext>().AsSelf();
-
-                builder.RegisterInstance(context.CodePackageActivationContext).ExternallyOwned().AsSelf();
-                scopeRegistrations?.Invoke(builder);
-            });
-
-
-
-            return child;
-        }
+       
 
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -55,7 +60,7 @@ namespace DotNetDevOps.ServiceFabric.Hosting
                 {
 
                     var child = MakeServiceContainer(serviceProvider.GetService<ILifetimeScope>(), context, scopedRegistrations);
-
+                    
                     try
                     {
                         return child.Resolve<TStatelessService>();

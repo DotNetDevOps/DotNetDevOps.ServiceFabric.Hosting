@@ -9,8 +9,8 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.DependencyInjection;
 namespace DotNetDevOps.ServiceFabric.Hosting
 {
-    public class StatefulServiceHost<TStatelessService> 
-        : BackgroundService
+    public class StatefulServiceHost<TStatelessService>
+           : ServiceHost<TStatelessService>
         where TStatelessService : StatefulService
     {
         private string serviceTypeName;
@@ -30,21 +30,7 @@ namespace DotNetDevOps.ServiceFabric.Hosting
             this.scopedRegistrations = scopedRegistrations;
         }
 
-        private static ILifetimeScope MakeServiceContainer<T>(ILifetimeScope container, T context, Action<ContainerBuilder> scopeRegistrations = null) where T : ServiceContext
-        {
-
-            var child = container.IntializeScope(builder=>
-            {
-                builder.RegisterInstance(context).ExternallyOwned().As<ServiceContext>().AsSelf();
-
-                builder.RegisterInstance(context.CodePackageActivationContext).ExternallyOwned().AsSelf();
-                scopeRegistrations?.Invoke(builder);
-            });
-
-           
-
-            return child;
-        }
+        
        
         
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)

@@ -42,7 +42,7 @@ namespace DotNetDevOps.ServiceFabric.Hosting
         {
             return host.ConfigureServices((context, services) =>
             {
-                services.AddSingleton(sp=>new StatelessServiceHost<TStatelessService>(serviceTypeName,sp,timeout,scopedRegistrations));
+                services.AddSingleton<IHostedService>(sp=>new StatelessServiceHost<TStatelessService>(serviceTypeName,sp,timeout,scopedRegistrations));
             });
             
         }
@@ -54,7 +54,7 @@ namespace DotNetDevOps.ServiceFabric.Hosting
         {
             return host.ConfigureServices((context, services) =>
             {
-                services.AddSingleton(sp => new StatefulServiceHost<TStatefulService>(serviceTypeName, sp, timeout, scopedRegistrations));
+                services.AddSingleton<IHostedService>(sp => new StatefulServiceHost<TStatefulService>(serviceTypeName, sp, timeout, scopedRegistrations));
             });
 
         }
