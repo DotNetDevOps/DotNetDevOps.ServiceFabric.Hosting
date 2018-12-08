@@ -8,6 +8,7 @@ using System.Threading;
 using Microsoft.ServiceFabric.Services.Runtime;
 using Microsoft.Extensions.Configuration;
 using System.Collections.Generic;
+using Microsoft.Extensions.Options;
 
 namespace DotNetDevOps.ServiceFabric.Hosting
 {
@@ -71,7 +72,27 @@ namespace DotNetDevOps.ServiceFabric.Hosting
             
         }
 
- 
+        /// <summary>
+        /// Configure using a subsection name for T
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="container"></param>
+        /// <param name="sectionName"></param>
+        /// <returns></returns>
+        public static IHostBuilder Configure<T>(this IHostBuilder host, string sectionName) where T : class
+        {
+            host.ConfigureContainer<ContainerBuilder>(services =>
+            {
+                services.Register((c) => new ConfigurationChangeTokenSource<T>(c.Resolve<IConfigurationRoot>().GetSection(sectionName))).As<IOptionsChangeTokenSource<T>>().SingleInstance();
+                services.Register((c) => new ConfigureFromConfigurationOptions<T>(c.Resolve<IConfigurationRoot>().GetSection(sectionName))).As<IConfigureOptions<T>>().SingleInstance();
+
+            });
+
+            return host;
+
+           
+
+        }
     }
 
 
