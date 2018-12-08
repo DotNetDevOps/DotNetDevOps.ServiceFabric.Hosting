@@ -6,9 +6,13 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.ServiceFabric.Services.Remoting.Client;
 using System.Threading;
 using Microsoft.ServiceFabric.Services.Runtime;
+using Microsoft.Extensions.Configuration;
+using System.Collections.Generic;
 
 namespace DotNetDevOps.ServiceFabric.Hosting
 {
+
+   
     public static class HostBuilderExtensions
     {
         private static void noop(ContainerBuilder obj)
@@ -66,6 +70,8 @@ namespace DotNetDevOps.ServiceFabric.Hosting
 
             
         }
+
+ 
     }
 
 
