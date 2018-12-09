@@ -7,6 +7,7 @@ using Microsoft.Extensions.Hosting;
 using System;
 using System.Collections.Generic;
 using System.Fabric;
+using System.IO;
 using System.Linq;
 
 namespace DotNetDevOps.ServiceFabric.Hosting
@@ -209,7 +210,18 @@ namespace DotNetDevOps.ServiceFabric.Hosting
 
 
              });
-          
+
+            ConfigureHostConfiguration((configurationBuilder) =>
+            {
+
+                configurationBuilder
+                    .AddInMemoryCollection(new[]{ new KeyValuePair<string,string>("environemnt", System.Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT")) })
+                    .AddEnvironmentVariables();
+
+
+            });
+
+
         }
 
 
