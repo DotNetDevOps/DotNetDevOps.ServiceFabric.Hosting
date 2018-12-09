@@ -215,7 +215,7 @@ namespace DotNetDevOps.ServiceFabric.Hosting
             {
 
                 configurationBuilder
-                    .AddInMemoryCollection(new[]{ new KeyValuePair<string,string>("environemnt", System.Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT")) })
+                    .AddInMemoryCollection(new[]{ new KeyValuePair<string,string>(HostDefaults.EnvironmentKey, System.Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT")) })
                     .AddEnvironmentVariables();
 
 
