@@ -37,7 +37,67 @@ namespace DotNetDevOps.ServiceFabric.Hosting.IntegrationTest
         public string Test { get; set; }
         public string Test1 { get; set; }
     }
-     
+    public class RootSingleton : IDisposable
+    {
+        public RootSingleton()
+        {
+            Console.WriteLine(nameof(RootSingleton) + " created");
+        }
+        public void Dispose()
+        {
+            Console.WriteLine(nameof(RootSingleton) + " disposed");
+        }
+    }
+    public class RootScoped : IDisposable
+    {
+        public RootScoped()
+        {
+            Console.WriteLine(nameof(RootScoped) + " created");
+        }
+        public void Dispose()
+        {
+            Console.WriteLine(nameof(RootScoped) + " disposed");
+        }
+    }
+
+    public class RootTrans : IDisposable
+    {
+        public RootTrans()
+        {
+            Console.WriteLine(nameof(RootTrans) + " created");
+        }
+        public void Dispose()
+        {
+            Console.WriteLine(nameof(RootTrans) + " disposed");
+        }
+    }
+
+    public class ChildSingleton : IDisposable
+    {
+        public ChildSingleton()
+        {
+            Console.WriteLine(nameof(ChildSingleton) + " created");
+        }
+        public void Dispose()
+        {
+            Console.WriteLine(nameof(ChildSingleton) + " disposed");
+        }
+    }
+
+    public class ChildScoped : IDisposable
+    {
+        private readonly RootScoped dep;
+
+        public ChildScoped(RootScoped dep)
+        {
+            Console.WriteLine(nameof(ChildScoped) + " created");
+            this.dep = dep;
+        }
+        public void Dispose()
+        {
+            Console.WriteLine(nameof(ChildScoped) + " disposed");
+        }
+    }
     public class UnitTest1
     {
         [Fact]
@@ -48,6 +108,112 @@ namespace DotNetDevOps.ServiceFabric.Hosting.IntegrationTest
 
 
         }
+
+        [Fact]
+        public void TestChildContainers()
+        {
+
+            var host = new FabricHostBuilder()
+                .ConfigureServices(serviceCollection =>
+                {
+                    serviceCollection.AddSingleton<RootSingleton>();
+                    serviceCollection.AddTransient<RootTrans>();
+                    serviceCollection.AddScoped<RootScoped>();
+                  //  serviceCollection.AddSingleton(new ShouldUseParent(typeof(RootScoped)));
+                });
+
+
+            using (var app = host.Build())
+            {
+
+                using (var webhostScope = app.Services.CreateScope())
+                {
+                    var lifetime = webhostScope.ServiceProvider.GetService<ILifetimeScope>();
+                    var a = new DefaultServiceProviderFactory(new ServiceProviderOptions { ValidateScopes=true });// ChildServiceProviderFactory(lifetime);
+
+                   
+
+                    var childservices = new ServiceCollection();
+                    childservices.AddSingleton(lifetime);
+                    childservices.AddParentSingleton<RootSingleton>();
+                    childservices.AddSingleton<ChildSingleton>();
+                    childservices.AddScoped<ChildScoped>();
+                    childservices.AddParentScoped<RootScoped>();
+                    childservices.AddParentTransient<RootTrans>();
+                    //childservices.AddTransient(sp =>
+                    //{
+                         
+                    //        var scope = sp.GetService<IServiceScope>();
+                    //        return scope.ServiceProvider.GetService<RootScoped>();
+                        
+                    //});
+                    
+                    // childservices.AddScoped(sp => sp.GetService<RootScoped>());
+
+                    var appServiceProvider = a.CreateServiceProvider(childservices);
+
+                    using (var perRequestScope = appServiceProvider.CreateScope())
+                    {
+                        var rs = perRequestScope.ServiceProvider.GetService<RootSingleton>();
+                        var rs1 = perRequestScope.ServiceProvider.GetService<RootScoped>();
+                        var a1 = perRequestScope.ServiceProvider.GetService<RootTrans>();
+                        var a2= perRequestScope.ServiceProvider.GetService<RootTrans>();
+
+                    }
+
+                    using (var perRequestScope = appServiceProvider.CreateScope())
+                    {
+                        var rs = perRequestScope.ServiceProvider.GetService<RootSingleton>();
+                        var rs1 = perRequestScope.ServiceProvider.GetService<RootScoped>();
+                        var a1 = perRequestScope.ServiceProvider.GetService<RootTrans>();
+                        var a2 = perRequestScope.ServiceProvider.GetService<RootTrans>();
+
+                        var test = perRequestScope.ServiceProvider.GetService<ChildScoped>();
+
+                    }
+
+
+
+                }
+
+                using (var webhostScope = app.Services.CreateScope())
+                {
+                    var lifetime = webhostScope.ServiceProvider.GetService<ILifetimeScope>();
+                    var a = new ChildServiceProviderFactory(lifetime);
+
+                    var childservices = new ServiceCollection();
+                    childservices.AddSingleton(lifetime.Resolve<RootSingleton>());
+                    childservices.AddSingleton<ChildSingleton>();
+                    childservices.AddScoped<ChildScoped>();
+                    childservices.AddScoped<RootScoped>();
+                    // childservices.AddScoped(sp => sp.GetService<RootScoped>());
+
+                    var appServiceProvider = a.CreateServiceProvider(childservices);
+
+                    using (var perRequestScope = appServiceProvider.CreateScope())
+                    {
+                        var rs = perRequestScope.ServiceProvider.GetService<RootSingleton>();
+                        var rs1 = perRequestScope.ServiceProvider.GetService<RootScoped>();
+
+
+                    }
+
+                    using (var perRequestScope = appServiceProvider.CreateScope())
+                    {
+                        var rs = perRequestScope.ServiceProvider.GetService<RootSingleton>();
+                        var rs1 = perRequestScope.ServiceProvider.GetService<RootScoped>();
+
+
+                    }
+
+
+
+                }
+            }
+
+
+        }
+
 
         [Fact]
         public void TestUseConfiguration()

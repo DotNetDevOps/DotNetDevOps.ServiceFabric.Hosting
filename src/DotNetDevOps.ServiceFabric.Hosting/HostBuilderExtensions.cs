@@ -87,7 +87,7 @@ namespace DotNetDevOps.ServiceFabric.Hosting
                 services.Register((c) => new ConfigureFromConfigurationOptions<T>(c.Resolve<IConfigurationRoot>().GetSection(sectionName))).As<IConfigureOptions<T>>().SingleInstance();
 
             });
-
+           
             return host;
 
            
