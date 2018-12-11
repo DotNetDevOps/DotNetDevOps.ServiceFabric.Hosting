@@ -29,12 +29,12 @@ namespace DotNetDevOps.ServiceFabric.Hosting
         public ContainerBuilder CreateBuilder(IServiceCollection services)
         {
             var builder = new ContainerBuilder();
-
+            services.AddSingleton(services);
             builder.Populate(services);
 
             _configurationAction(builder);
 
-            builder.RegisterInstance(services);
+         //   builder.RegisterInstance(services);
 
             return builder;
         }
