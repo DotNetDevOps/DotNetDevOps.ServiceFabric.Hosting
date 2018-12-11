@@ -3,6 +3,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Options;
 using System;
+using System.Collections.Generic;
 
 namespace DotNetDevOps.ServiceFabric.Hosting
 {
@@ -53,6 +54,13 @@ namespace DotNetDevOps.ServiceFabric.Hosting
                 }
 
 
+            }
+
+            var options = lifetimeScope.Resolve<IEnumerable<OptionRegistration>>();
+            foreach(var option in options)
+            {
+                containerBuilder.AddSingleton(option.IConfigureOptionsType, sp => lifetimeScope.Resolve(option.IConfigureOptionsType));
+                containerBuilder.AddSingleton(option.IOptionsChangeTokenSourceType, sp => lifetimeScope.Resolve(option.IOptionsChangeTokenSourceType));
             }
 
             return containerBuilder.BuildServiceProvider(new ServiceProviderOptions { ValidateScopes = true });

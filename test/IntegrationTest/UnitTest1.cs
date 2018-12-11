@@ -240,16 +240,23 @@ namespace DotNetDevOps.ServiceFabric.Hosting.IntegrationTest
 
         }
 
+
+       
+
         [Fact]
         public void TestForwardingScope()
         {
             var hostBuilder = new FabricHostBuilder()
+                  .ConfigureAppConfiguration((context, builder) =>
+                  {
+                      builder.AddInMemoryCollection(new[] { new KeyValuePair<string, string>("test", "test"), new KeyValuePair<string, string>("MySection:Test", "ConfigureExample") });
+                  })
                 .ConfigureServices((context,services)=>
                 {
                     services.AddSingleton<RootSingleton>();
                     services.AddTransient<RootTrans>();
                     services.AddScoped<RootScoped>();
-                });
+                }).Configure<MyOptions>("MySection"); 
 
             using (var app = hostBuilder.Build())
             {
@@ -265,6 +272,7 @@ namespace DotNetDevOps.ServiceFabric.Hosting.IntegrationTest
                     var childservices = new ServiceCollection();                    
                     childservices.AddSingleton<ChildSingleton>();
                     childservices.AddScoped<ChildScoped>();
+                    childservices.AddOptions();
                  
                     var appServiceProvider = a.CreateServiceProvider(childservices);
 
@@ -274,6 +282,8 @@ namespace DotNetDevOps.ServiceFabric.Hosting.IntegrationTest
                         var rs1 = perRequestScope.ServiceProvider.GetRequiredService<RootScoped>();
                         var a1 = perRequestScope.ServiceProvider.GetRequiredService<RootTrans>();
                         var a2 = perRequestScope.ServiceProvider.GetRequiredService<RootTrans>();
+
+                        var options = perRequestScope.ServiceProvider.GetRequiredService<IOptions<MyOptions>>();
 
                     }
 
@@ -305,7 +315,8 @@ namespace DotNetDevOps.ServiceFabric.Hosting.IntegrationTest
                 .ConfigureAppConfiguration((context, builder) =>
                 {
                     builder.AddInMemoryCollection(new[] { new KeyValuePair<string, string>("test", "test"), new KeyValuePair<string, string>("MySection:Test", "ConfigureExample") });
-                }).ConfigureServices((context, services) =>
+                })
+                .ConfigureServices((context, services) =>
                 {
 
                     services.AddSingleton<ConfigurationExtenderExamplerDependency>();
@@ -316,6 +327,9 @@ namespace DotNetDevOps.ServiceFabric.Hosting.IntegrationTest
 
             var host = hostBuilder.Build();
             {
+
+                var a = host.Services.GetRequiredService < IOptions<MyOptions>>();
+
                 var internalScope = host.Services.GetService<ILifetimeScope>();
                 Assert.True(internalScope.IsRegistered<IConfiguration>());
 

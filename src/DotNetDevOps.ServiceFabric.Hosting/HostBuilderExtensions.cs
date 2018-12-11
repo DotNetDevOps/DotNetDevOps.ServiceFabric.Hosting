@@ -85,7 +85,12 @@ namespace DotNetDevOps.ServiceFabric.Hosting
             {
                 services.Register((c) => new ConfigurationChangeTokenSource<T>(c.Resolve<IConfigurationRoot>().GetSection(sectionName))).As<IOptionsChangeTokenSource<T>>().SingleInstance();
                 services.Register((c) => new ConfigureFromConfigurationOptions<T>(c.Resolve<IConfigurationRoot>().GetSection(sectionName))).As<IConfigureOptions<T>>().SingleInstance();
+                services.RegisterInstance(new OptionRegistration() {  IConfigureOptionsType = typeof(IConfigureOptions<T>), IOptionsChangeTokenSourceType = typeof(IOptionsChangeTokenSource<T>) });
+            });
 
+            host.ConfigureServices((context, services) =>
+            {
+               
             });
            
             return host;
@@ -94,6 +99,10 @@ namespace DotNetDevOps.ServiceFabric.Hosting
 
         }
     }
-
+    public class OptionRegistration
+    {
+        public Type IConfigureOptionsType {get;set;}
+        public Type IOptionsChangeTokenSourceType { get; set; }
+    }
 
 }
