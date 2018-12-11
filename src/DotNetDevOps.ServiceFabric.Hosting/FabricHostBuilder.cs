@@ -28,7 +28,7 @@ namespace DotNetDevOps.ServiceFabric.Hosting
                 services.AddSingleton(c => new FabricClient());
 
                 if(useServiceFactoryForwarding)
-                    services.AddScoped<IServiceProviderFactory<IServiceCollection>, ForwardingServiceProviderFactory>();
+                    services.AddSingleton<IServiceProviderFactory<IServiceCollection>, ForwardingServiceProviderFactory>();
 
                  services.AddSingleton< IConfigurationBuilder>(new ConfigurationBuilder());
                 services.AddSingleton(c =>
