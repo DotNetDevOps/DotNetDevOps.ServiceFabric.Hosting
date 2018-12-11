@@ -43,8 +43,13 @@ namespace DotNetDevOps.ServiceFabric.Hosting.IntegrationTest
         {
             Console.WriteLine(nameof(RootSingleton) + " created");
         }
+        bool isDisposed = false;
         public void Dispose()
         {
+            if (isDisposed)
+                throw new ObjectDisposedException(nameof(RootSingleton));
+
+            isDisposed = true;
             Console.WriteLine(nameof(RootSingleton) + " disposed");
         }
     }
@@ -54,8 +59,13 @@ namespace DotNetDevOps.ServiceFabric.Hosting.IntegrationTest
         {
             Console.WriteLine(nameof(RootScoped) + " created");
         }
+        bool isDisposed = false;
         public void Dispose()
         {
+            if (isDisposed)
+                throw new ObjectDisposedException(nameof(RootScoped));
+
+            isDisposed = true;
             Console.WriteLine(nameof(RootScoped) + " disposed");
         }
     }
@@ -66,8 +76,13 @@ namespace DotNetDevOps.ServiceFabric.Hosting.IntegrationTest
         {
             Console.WriteLine(nameof(RootTrans) + " created");
         }
+        bool isDisposed = false;
         public void Dispose()
         {
+            if (isDisposed)
+                throw new ObjectDisposedException(nameof(RootTrans));
+
+            isDisposed = true;
             Console.WriteLine(nameof(RootTrans) + " disposed");
         }
     }
@@ -78,8 +93,13 @@ namespace DotNetDevOps.ServiceFabric.Hosting.IntegrationTest
         {
             Console.WriteLine(nameof(ChildSingleton) + " created");
         }
+        bool isDisposed = false;
         public void Dispose()
         {
+            if (isDisposed)
+                throw new ObjectDisposedException(nameof(ChildSingleton));
+
+            isDisposed = true;
             Console.WriteLine(nameof(ChildSingleton) + " disposed");
         }
     }
@@ -93,8 +113,13 @@ namespace DotNetDevOps.ServiceFabric.Hosting.IntegrationTest
             Console.WriteLine(nameof(ChildScoped) + " created");
             this.dep = dep;
         }
+        bool isDisposed = false;
         public void Dispose()
         {
+            if (isDisposed)
+                throw new ObjectDisposedException(nameof(ChildScoped));
+
+            isDisposed = true;
             Console.WriteLine(nameof(ChildScoped) + " disposed");
         }
     }
@@ -179,7 +204,7 @@ namespace DotNetDevOps.ServiceFabric.Hosting.IntegrationTest
                 using (var webhostScope = app.Services.CreateScope())
                 {
                     var lifetime = webhostScope.ServiceProvider.GetService<ILifetimeScope>();
-                    var a = new ChildServiceProviderFactory(lifetime);
+                    var a = new DefaultServiceProviderFactory(); // new ChildServiceProviderFactory(lifetime);
 
                     var childservices = new ServiceCollection();
                     childservices.AddSingleton(lifetime.Resolve<RootSingleton>());
@@ -212,13 +237,71 @@ namespace DotNetDevOps.ServiceFabric.Hosting.IntegrationTest
             }
 
 
+
         }
 
+        [Fact]
+        public void TestForwardingScope()
+        {
+            var hostBuilder = new FabricHostBuilder()
+                .ConfigureServices((context,services)=>
+                {
+                    services.AddSingleton<RootSingleton>();
+                    services.AddTransient<RootTrans>();
+                    services.AddScoped<RootScoped>();
+                });
+
+            using (var app = hostBuilder.Build())
+            {
+
+                using (var webhostScope = app.Services.CreateScope())
+                {
+                    //  var lifetime = webhostScope.ServiceProvider.GetService<ILifetimeScope>();
+
+                    var a = webhostScope.ServiceProvider.GetService<IServiceProviderFactory<IServiceCollection>>();
+
+
+
+                    var childservices = new ServiceCollection();                    
+                    childservices.AddSingleton<ChildSingleton>();
+                    childservices.AddScoped<ChildScoped>();
+                 
+                    var appServiceProvider = a.CreateServiceProvider(childservices);
+
+                    using (var perRequestScope = appServiceProvider.CreateScope())
+                    {
+                        var rs = perRequestScope.ServiceProvider.GetRequiredService<RootSingleton>();
+                        var rs1 = perRequestScope.ServiceProvider.GetRequiredService<RootScoped>();
+                        var a1 = perRequestScope.ServiceProvider.GetRequiredService<RootTrans>();
+                        var a2 = perRequestScope.ServiceProvider.GetRequiredService<RootTrans>();
+
+                    }
+
+                    using (var perRequestScope = appServiceProvider.CreateScope())
+                    {
+                        var rs = perRequestScope.ServiceProvider.GetRequiredService<RootSingleton>();
+                        var rs1 = perRequestScope.ServiceProvider.GetRequiredService<RootScoped>();
+                        var a1 = perRequestScope.ServiceProvider.GetRequiredService<RootTrans>();
+                        var a2 = perRequestScope.ServiceProvider.GetRequiredService<RootTrans>();
+
+                        var test = perRequestScope.ServiceProvider.GetRequiredService<ChildScoped>();
+
+                    }
+
+
+
+                }
+                 
+            }
+
+
+        }
 
         [Fact]
         public void TestUseConfiguration()
         {
             var hostBuilder = new FabricHostBuilder()
+
                 .ConfigureAppConfiguration((context, builder) =>
                 {
                     builder.AddInMemoryCollection(new[] { new KeyValuePair<string, string>("test", "test"), new KeyValuePair<string, string>("MySection:Test", "ConfigureExample") });
@@ -236,11 +319,14 @@ namespace DotNetDevOps.ServiceFabric.Hosting.IntegrationTest
                 var internalScope = host.Services.GetService<ILifetimeScope>();
                 Assert.True(internalScope.IsRegistered<IConfiguration>());
 
+                var outerconfig = host.Services.GetService<IConfiguration>();
+
                 using (var outerScope = host.Services.GetService<IServiceScopeFactory>().CreateScope())
                 {
                     var configuration = outerScope.ServiceProvider.GetService<IConfiguration>();
                     var configurationRoot = outerScope.ServiceProvider.GetService<IConfigurationRoot>();
-                 
+
+                    Assert.Equal(outerconfig, configuration);
                     Assert.Equal(configuration, configurationRoot);
                     Assert.Equal("test2", configuration["dependency"]);
                     Assert.Equal("test", configuration["test"]);
