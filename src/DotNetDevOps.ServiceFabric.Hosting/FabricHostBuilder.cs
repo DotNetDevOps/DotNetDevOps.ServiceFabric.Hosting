@@ -13,6 +13,7 @@ namespace DotNetDevOps.ServiceFabric.Hosting
     //  public class ServiceProxy
     public class FabricHostBuilder : HostBuilder
     {
+
         public FabricHostBuilder(bool useServiceFactoryForwarding=true)
         {
             UseServiceProviderFactory(useServiceFactoryForwarding ? 
@@ -22,6 +23,9 @@ namespace DotNetDevOps.ServiceFabric.Hosting
             );
             ConfigureServices((context, services) =>
             {
+
+              
+
                 services.AddSingleton(c => FabricRuntime.Create());
                 services.AddSingleton< ICodePackageActivationContext>(c => FabricRuntime.GetActivationContext());
                 services.AddSingleton(c => c.GetService<ICodePackageActivationContext>().GetConfigurationPackageObject("config"));
@@ -41,6 +45,7 @@ namespace DotNetDevOps.ServiceFabric.Hosting
                         cbuilder = extension.Extend(cbuilder);
                     }
                     return cbuilder.Build();
+
                 });
                 services.AddSingleton<IConfiguration>(c=>c.GetRequiredService< IConfigurationRoot>());
             });

@@ -85,7 +85,10 @@ namespace DotNetDevOps.ServiceFabric.Hosting
             {
                 services.Register((c) => new ConfigurationChangeTokenSource<T>(c.Resolve<IConfigurationRoot>().GetSection(sectionName))).As<IOptionsChangeTokenSource<T>>().SingleInstance();
                 services.Register((c) => new ConfigureFromConfigurationOptions<T>(c.Resolve<IConfigurationRoot>().GetSection(sectionName))).As<IConfigureOptions<T>>().SingleInstance();
-                services.RegisterInstance(new OptionRegistration() {  IConfigureOptionsType = typeof(IConfigureOptions<T>), IOptionsChangeTokenSourceType = typeof(IOptionsChangeTokenSource<T>) });
+                //services.RegisterInstance(new OptionRegistration() {  IConfigureOptionsType = typeof(IConfigureOptions<T>), IOptionsChangeTokenSourceType = typeof(IOptionsChangeTokenSource<T>) });
+                services.RegisterInstance(new OptionRegistration {  ServiceType = typeof(IConfigureOptions<T>) , ServiceLifetime = ServiceLifetime.Singleton });
+                services.RegisterInstance(new OptionRegistration { ServiceType = typeof(IOptionsChangeTokenSource<T>), ServiceLifetime = ServiceLifetime.Singleton });
+
             });
 
             host.ConfigureServices((context, services) =>
@@ -101,8 +104,14 @@ namespace DotNetDevOps.ServiceFabric.Hosting
     }
     public class OptionRegistration
     {
-        public Type IConfigureOptionsType {get;set;}
-        public Type IOptionsChangeTokenSourceType { get; set; }
+      //  public Type IConfigureOptionsType {get;set;}
+      //  public Type IOptionsChangeTokenSourceType { get; set; }
+
+
+        public Type ServiceType { get; set; }
+        public ServiceLifetime ServiceLifetime { get; set; }
+
+        public bool ShouldIgnore { get; set; }
     }
 
 }

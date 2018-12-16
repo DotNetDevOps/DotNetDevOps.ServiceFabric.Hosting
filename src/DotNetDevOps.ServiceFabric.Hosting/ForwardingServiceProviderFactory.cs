@@ -4,6 +4,7 @@ using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Options;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace DotNetDevOps.ServiceFabric.Hosting
 {
@@ -28,6 +29,10 @@ namespace DotNetDevOps.ServiceFabric.Hosting
             containerBuilder.TryAddScoped(sp => new NoneDisposableScope(lifetimeScope.BeginLifetimeScope()));
             // containerBuilder.AddTransient<), OptionsManager<>>();
 
+
+            var options = lifetimeScope.Resolve<IEnumerable<OptionRegistration>>();
+            var ignores = options.Where(o => o.ShouldIgnore).ToLookup(k => k.ServiceType);
+
             foreach (var parentregistration in parent)
             {
                 if(parentregistration.ServiceType == typeof(IOptions<>)){
@@ -37,6 +42,11 @@ namespace DotNetDevOps.ServiceFabric.Hosting
                 {
                     continue;
                 }
+                if(ignores.Contains(parentregistration.ServiceType))
+                {
+                    continue;
+                }
+               
 
                 switch (parentregistration.Lifetime)
                 {
@@ -56,11 +66,13 @@ namespace DotNetDevOps.ServiceFabric.Hosting
 
             }
 
-            var options = lifetimeScope.Resolve<IEnumerable<OptionRegistration>>();
-            foreach(var option in options)
+            foreach(var option in options.Where(o=>!o.ShouldIgnore))
             {
-                containerBuilder.AddSingleton(option.IConfigureOptionsType, sp => lifetimeScope.Resolve(option.IConfigureOptionsType));
-                containerBuilder.AddSingleton(option.IOptionsChangeTokenSourceType, sp => lifetimeScope.Resolve(option.IOptionsChangeTokenSourceType));
+                if (option.ServiceLifetime == ServiceLifetime.Singleton)
+                {
+                    containerBuilder.AddSingleton(option.ServiceType, sp => lifetimeScope.Resolve(option.ServiceType));
+                }
+               
             }
 
             return containerBuilder.BuildServiceProvider(new ServiceProviderOptions { ValidateScopes = true });
