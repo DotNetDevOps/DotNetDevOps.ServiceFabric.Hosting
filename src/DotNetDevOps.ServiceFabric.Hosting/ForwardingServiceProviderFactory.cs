@@ -43,7 +43,7 @@ namespace DotNetDevOps.ServiceFabric.Hosting
                     continue;
                 }
                 if(ignores.Contains(parentregistration.ServiceType))
-                {
+                {                 
                     continue;
                 }
                

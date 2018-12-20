@@ -51,7 +51,7 @@ namespace DotNetDevOps.ServiceFabric.Hosting
             });
             ConfigureContainer<ContainerBuilder>((context, builder) =>
              {
-                 
+
                  //builder.Register(c => FabricRuntime.Create()).AsSelf().SingleInstance();
                  //builder.Register(c => FabricRuntime.GetActivationContext()).As<ICodePackageActivationContext>().SingleInstance();
                  //builder.Register(c => c.Resolve<ICodePackageActivationContext>().GetConfigurationPackageObject("config")).As<ConfigurationPackage>().SingleInstance();
@@ -71,6 +71,7 @@ namespace DotNetDevOps.ServiceFabric.Hosting
 
                  //}).AsSelf().As<IConfiguration>().SingleInstance();
 
+                 builder.RegisterInstance(new OptionRegistration { ServiceType = typeof(IHostedService), ServiceLifetime = ServiceLifetime.Singleton, ShouldIgnore=true });
 
              });
 
