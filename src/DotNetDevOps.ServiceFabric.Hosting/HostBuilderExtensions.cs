@@ -9,6 +9,7 @@ using Microsoft.ServiceFabric.Services.Runtime;
 using Microsoft.Extensions.Configuration;
 using System.Collections.Generic;
 using Microsoft.Extensions.Options;
+using System.Fabric;
 
 namespace DotNetDevOps.ServiceFabric.Hosting
 {
@@ -37,7 +38,7 @@ namespace DotNetDevOps.ServiceFabric.Hosting
         public static IHostBuilder WithStatelessService<TStatelessService>(
             this IHostBuilder host,
             string serviceTypeName, 
-            Action<ContainerBuilder> scopedRegistrations = null, 
+            Action<ContainerBuilder, StatelessServiceContext> scopedRegistrations = null, 
             TimeSpan timeout = default(TimeSpan), CancellationToken cancellationToken = default(CancellationToken)) where TStatelessService : StatelessService
         {
             return host.ConfigureServices((context, services) =>
@@ -49,7 +50,7 @@ namespace DotNetDevOps.ServiceFabric.Hosting
         public static IHostBuilder WithStatefullService<TStatefulService>(
             this IHostBuilder host,
             string serviceTypeName,
-            Action<ContainerBuilder> scopedRegistrations = null,
+            Action<ContainerBuilder,StatefulServiceContext> scopedRegistrations = null,
             TimeSpan timeout = default(TimeSpan), CancellationToken cancellationToken = default(CancellationToken)) where TStatefulService : StatefulService
         {
             return host.ConfigureServices((context, services) =>

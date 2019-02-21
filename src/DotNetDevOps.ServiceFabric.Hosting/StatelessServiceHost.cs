@@ -12,7 +12,7 @@ namespace DotNetDevOps.ServiceFabric.Hosting
 {
     public abstract class ServiceHost<TService>: BackgroundService
     {
-        protected ILifetimeScope MakeServiceContainer<T>(ILifetimeScope container, T context, Action<ContainerBuilder> scopeRegistrations = null) where T : ServiceContext
+        protected ILifetimeScope MakeServiceContainer<T>(ILifetimeScope container, T context, Action<ContainerBuilder,T> scopeRegistrations = null) where T : ServiceContext
         {
 
             var child = container.IntializeScope(builder =>
@@ -21,7 +21,7 @@ namespace DotNetDevOps.ServiceFabric.Hosting
                 builder.RegisterInstance(context).ExternallyOwned().As<ServiceContext>().AsSelf();
 
                 builder.RegisterInstance(context.CodePackageActivationContext).ExternallyOwned().AsSelf();
-                scopeRegistrations?.Invoke(builder);
+                scopeRegistrations?.Invoke(builder,context);
             });
 
 
@@ -36,13 +36,13 @@ namespace DotNetDevOps.ServiceFabric.Hosting
         private string serviceTypeName;
         private readonly IServiceProvider serviceProvider;
         private readonly TimeSpan timeout;
-        private readonly Action<ContainerBuilder> scopedRegistrations;
+        private readonly Action<ContainerBuilder, StatelessServiceContext> scopedRegistrations;
 
         public StatelessServiceHost(
             string serviceTypeName,
             IServiceProvider serviceProvider,
             TimeSpan timeout = default(TimeSpan),
-            Action<ContainerBuilder> scopedRegistrations = null)
+            Action<ContainerBuilder,StatelessServiceContext> scopedRegistrations = null)
         {
             this.serviceTypeName = serviceTypeName ?? throw new ArgumentNullException(nameof(serviceTypeName));
             this.serviceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));

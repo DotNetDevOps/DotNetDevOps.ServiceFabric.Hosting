@@ -16,13 +16,13 @@ namespace DotNetDevOps.ServiceFabric.Hosting
         private string serviceTypeName;
         private readonly IServiceProvider serviceProvider;
         private readonly TimeSpan timeout;
-        private readonly Action<ContainerBuilder> scopedRegistrations;
+        private readonly Action<ContainerBuilder,StatefulServiceContext> scopedRegistrations;
 
         public StatefulServiceHost(
             string serviceTypeName,
             IServiceProvider serviceProvider,
             TimeSpan timeout = default(TimeSpan),
-            Action<ContainerBuilder> scopedRegistrations = null)
+            Action<ContainerBuilder, StatefulServiceContext> scopedRegistrations = null)
         {
             this.serviceTypeName = serviceTypeName ?? throw new ArgumentNullException(nameof(serviceTypeName));
             this.serviceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
