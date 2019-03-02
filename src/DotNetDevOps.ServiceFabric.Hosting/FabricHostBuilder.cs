@@ -5,6 +5,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using System.Collections.Generic;
 using System.Fabric;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 
@@ -16,6 +17,13 @@ namespace DotNetDevOps.ServiceFabric.Hosting
 
         public FabricHostBuilder(bool useServiceFactoryForwarding=true)
         {
+            var culture = new CultureInfo("en-Us"); // replace en-US with the selected culture or string from the combobox
+            System.Threading.Thread.CurrentThread.CurrentCulture = culture;
+            System.Threading.Thread.CurrentThread.CurrentUICulture = culture;
+            CultureInfo.CurrentCulture = culture;
+            CultureInfo.DefaultThreadCurrentCulture = culture;
+            CultureInfo.DefaultThreadCurrentUICulture = culture;
+
             UseServiceProviderFactory(useServiceFactoryForwarding ? 
                 new MyAutofacServiceProviderFactory() : 
                 new AutofacServiceProviderFactory()

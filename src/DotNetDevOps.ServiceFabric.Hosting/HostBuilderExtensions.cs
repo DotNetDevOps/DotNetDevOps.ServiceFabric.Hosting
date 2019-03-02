@@ -84,6 +84,17 @@ namespace DotNetDevOps.ServiceFabric.Hosting
             return builder;
         }
 
+        public static IServiceCollection WithStatelessService<TStatelessService>(
+            this IServiceCollection services,
+            string serviceTypeName,
+            Action<ContainerBuilder, StatelessServiceContext> scopedRegistrations = null,
+            TimeSpan timeout = default(TimeSpan), CancellationToken cancellationToken = default(CancellationToken)) where TStatelessService : StatelessService
+        {
+            
+             return   services.AddSingleton<IHostedService>(sp => new StatelessServiceHost<TStatelessService>(serviceTypeName, sp, timeout, scopedRegistrations));
+            
+        }
+
         public static IHostBuilder WithStatelessService<TStatelessService>(
             this IHostBuilder host,
             string serviceTypeName, 
@@ -92,7 +103,8 @@ namespace DotNetDevOps.ServiceFabric.Hosting
         {
             return host.ConfigureServices((context, services) =>
             {
-                services.AddSingleton<IHostedService>(sp=>new StatelessServiceHost<TStatelessService>(serviceTypeName,sp,timeout,scopedRegistrations));
+                services.WithStatelessService<TStatelessService>(serviceTypeName, scopedRegistrations, timeout, cancellationToken);
+               // services.AddSingleton<IHostedService>(sp=>new StatelessServiceHost<TStatelessService>(serviceTypeName,sp,timeout,scopedRegistrations));
             });
             
         }

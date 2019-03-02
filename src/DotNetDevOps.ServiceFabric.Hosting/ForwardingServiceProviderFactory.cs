@@ -35,9 +35,7 @@ namespace DotNetDevOps.ServiceFabric.Hosting
 
             foreach (var parentregistration in parent)
             {
-                if(parentregistration.ServiceType == typeof(IOptions<>)){
-
-                }
+                
                 if(parentregistration.ServiceType.IsGenericTypeDefinition)
                 {
                     continue;
