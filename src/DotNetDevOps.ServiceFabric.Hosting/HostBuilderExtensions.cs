@@ -95,6 +95,8 @@ namespace DotNetDevOps.ServiceFabric.Hosting
             
         }
 
+        
+
         public static IHostBuilder WithStatelessService<TStatelessService>(
             this IHostBuilder host,
             string serviceTypeName, 
