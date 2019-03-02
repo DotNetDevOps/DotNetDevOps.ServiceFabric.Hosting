@@ -128,7 +128,7 @@ namespace DotNetDevOps.ServiceFabric.Hosting.IntegrationTest
         [Fact]
         public void Test1()
         {
-            var host = new FabricHostBuilder()
+            var host = new FabricHostBuilder(new string[0])
                 .WithServiceProxy< IMyService>("aa","a"); 
 
 
@@ -138,7 +138,7 @@ namespace DotNetDevOps.ServiceFabric.Hosting.IntegrationTest
         public void TestChildContainers()
         {
 
-            var host = new FabricHostBuilder()
+            var host = new FabricHostBuilder(new string[0])
                 .ConfigureServices(serviceCollection =>
                 {
                     serviceCollection.AddSingleton<RootSingleton>();
@@ -246,7 +246,7 @@ namespace DotNetDevOps.ServiceFabric.Hosting.IntegrationTest
         [Fact]
         public void TestForwardingScope()
         {
-            var hostBuilder = new FabricHostBuilder()
+            var hostBuilder = new FabricHostBuilder(new string[0])
                   .ConfigureAppConfiguration((context, builder) =>
                   {
                       builder.AddInMemoryCollection(new[] { new KeyValuePair<string, string>("test", "test"), new KeyValuePair<string, string>("MySection:Test", "ConfigureExample") });
@@ -310,7 +310,7 @@ namespace DotNetDevOps.ServiceFabric.Hosting.IntegrationTest
         [Fact]
         public void TestUseConfiguration()
         {
-            var hostBuilder = new FabricHostBuilder()
+            var hostBuilder = new FabricHostBuilder(new string[0])
 
                 .ConfigureAppConfiguration((context, builder) =>
                 {
