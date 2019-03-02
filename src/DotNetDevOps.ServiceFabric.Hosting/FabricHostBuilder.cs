@@ -11,11 +11,24 @@ using System.Linq;
 
 namespace DotNetDevOps.ServiceFabric.Hosting
 {
+    public class ConsoleArguments
+    {
+        private string[] args;
+
+        public ConsoleArguments(string[] args)
+        {
+            this.args = args;
+        }
+
+        public bool IsServiceFabric => this.args.Contains("--serviceFabric");
+    }
+
+
     //  public class ServiceProxy
     public class FabricHostBuilder : HostBuilder
     {
 
-        public FabricHostBuilder(bool useServiceFactoryForwarding=true)
+        public FabricHostBuilder(string[] arguments, bool useServiceFactoryForwarding=true)
         {
             var culture = new CultureInfo("en-Us"); // replace en-US with the selected culture or string from the combobox
             System.Threading.Thread.CurrentThread.CurrentCulture = culture;
@@ -31,7 +44,7 @@ namespace DotNetDevOps.ServiceFabric.Hosting
             );
             ConfigureServices((context, services) =>
             {
-
+                services.AddSingleton(new ConsoleArguments(arguments));
               
 
                 services.AddSingleton(c => FabricRuntime.Create());
