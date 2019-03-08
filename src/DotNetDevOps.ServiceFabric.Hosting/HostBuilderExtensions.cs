@@ -13,13 +13,77 @@ using System.Fabric;
 using Microsoft.ServiceFabric.Actors.Runtime;
 using Microsoft.ServiceFabric.Actors;
 using DotNetDevOps.ServiceFabric.Hosting.DependencyInjection;
+using Microsoft.AspNetCore.DataProtection;
+using Microsoft.WindowsAzure.Storage.Blob;
+using Microsoft.Azure.KeyVault;
+using System.Threading.Tasks;
+using System.Linq;
+using System.Security.Cryptography.X509Certificates;
 
 namespace DotNetDevOps.ServiceFabric.Hosting
 {
 
-   
+    public class KeyMatrialStore
+    {
+        public X509Certificate2[] Certs { get; }
+
+        public KeyMatrialStore(X509Certificate2[] certs)
+        {
+            this.Certs = certs;
+        }
+    }
+
     public static class HostBuilderExtensions
     {
+        public static async Task<X509Certificate2[]> GetCerts(this KeyVaultClient Client, string KeyVaultUri,string SecretName)
+        {
+            //  var certs = await Client.GetSecretAsync("","idsrv");
+            //  certs.
+            var certsVersions = await Client.GetSecretVersionsAsync(KeyVaultUri, SecretName);
+
+            var secrets = await Task.WhenAll(certsVersions.Where(k => k.Attributes?.Enabled ?? false).Select(k => Client.GetSecretAsync(k.Identifier.Identifier)));
+
+            var certs = secrets.Select(s => new X509Certificate2(Convert.FromBase64String(s.Value), (string)null, X509KeyStorageFlags.MachineKeySet)).ToArray();
+            return certs;
+
+        }
+
+        public static IHostBuilder AddGatewayDataProtection(this IHostBuilder hostBuilder)
+        {
+
+
+            return hostBuilder.ConfigureServices((context, services) =>
+            {
+                var args = context.Properties["ConsoleArguments"] as ConsoleArguments;
+                if (args.IsServiceFabric)
+                {
+                    var dataprotection = context.Properties["ApplicationStorageService"] as IDataProtectionStoreService;
+                    var container = new CloudBlobContainer(new Uri(dataprotection.GetApplicationSasUri().GetAwaiter().GetResult()));
+
+                    var certs = new KeyVaultClient(dataprotection.GetVaultTokenAsync)
+                    .GetCerts(
+                        context.Configuration.GetValue<string>("DataProtectionSettings:KeyVaultUri"), 
+                        context.Configuration.GetValue<string>("DataProtectionSettings:SecretName"))
+                        .GetAwaiter().GetResult();
+
+                    services.AddSingleton(new KeyMatrialStore(certs));
+                    
+                
+
+                    services.AddDataProtection()
+                         .SetApplicationName(context.Configuration.GetValue<string>("DataProtectionSettings:ApplicationName"))
+                          .PersistKeysToAzureBlobStorage(container.GetBlockBlobReference(context.Configuration.GetValue<string>("DataProtectionSettings:ApplicationName") + ".csrf"))
+                          .ProtectKeysWithCertificate(certs.First())
+                          .UnprotectKeysWithAnyCertificate(certs.Skip(1).ToArray());
+
+
+                }
+                ;
+            });
+        }
+
+ 
+
         private static void noop(ContainerBuilder obj)
         {
 

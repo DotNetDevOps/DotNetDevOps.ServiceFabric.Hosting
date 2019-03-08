@@ -8,6 +8,8 @@
     <RootNamespace>DotNetDevOps.ServiceFabric.Hosting.IntegrationTest</RootNamespace>
 
     <AssemblyName>DotNetDevOps.ServiceFabric.Hosting.IntegrationTest</AssemblyName>
+
+    <Platforms>AnyCPU;x64</Platforms>
   </PropertyGroup>
 
   <ItemGroup>
