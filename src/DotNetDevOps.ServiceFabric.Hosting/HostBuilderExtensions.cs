@@ -19,6 +19,7 @@ using Microsoft.Azure.KeyVault;
 using System.Threading.Tasks;
 using System.Linq;
 using System.Security.Cryptography.X509Certificates;
+using System.IO;
 
 namespace DotNetDevOps.ServiceFabric.Hosting
 {
@@ -35,6 +36,22 @@ namespace DotNetDevOps.ServiceFabric.Hosting
 
     public static class HostBuilderExtensions
     {
+        public static IHostBuilder ConfigureDefaultAppConfiguration(this IHostBuilder hostBuilder)
+        {
+            return hostBuilder.ConfigureAppConfiguration((context, configurationBuilder) =>
+                  {
+                      configurationBuilder
+                          .SetBasePath(Directory.GetCurrentDirectory())
+                          .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
+                          .AddJsonFile($"appsettings.{context.HostingEnvironment.EnvironmentName}.json", optional: true)
+                          .AddEnvironmentVariables();
+
+                      if (context.GetConsoleArguments().IsServiceFabric)
+                      {
+                          configurationBuilder.AddServiceFabricConfig("Config");
+                      }
+                  });
+        }
         public static async Task<X509Certificate2[]> GetCerts(this KeyVaultClient Client, string KeyVaultUri,string SecretName)
         {
             //  var certs = await Client.GetSecretAsync("","idsrv");
@@ -214,8 +231,8 @@ namespace DotNetDevOps.ServiceFabric.Hosting
                 services.Register((c) => new ConfigurationChangeTokenSource<T>(c.Resolve<IConfigurationRoot>().GetSection(sectionName))).As<IOptionsChangeTokenSource<T>>().SingleInstance();
                 services.Register((c) => new ConfigureFromConfigurationOptions<T>(c.Resolve<IConfigurationRoot>().GetSection(sectionName))).As<IConfigureOptions<T>>().SingleInstance();
                 //services.RegisterInstance(new OptionRegistration() {  IConfigureOptionsType = typeof(IConfigureOptions<T>), IOptionsChangeTokenSourceType = typeof(IOptionsChangeTokenSource<T>) });
-                services.RegisterInstance(new OptionRegistration {  ServiceType = typeof(IConfigureOptions<T>) , ServiceLifetime = ServiceLifetime.Singleton });
-                services.RegisterInstance(new OptionRegistration { ServiceType = typeof(IOptionsChangeTokenSource<T>), ServiceLifetime = ServiceLifetime.Singleton });
+              //  services.RegisterInstance(new OptionRegistration {  ServiceType = typeof(IConfigureOptions<T>) , ServiceLifetime = ServiceLifetime.Singleton });
+              //  services.RegisterInstance(new OptionRegistration { ServiceType = typeof(IOptionsChangeTokenSource<T>), ServiceLifetime = ServiceLifetime.Singleton });
 
             });
 
