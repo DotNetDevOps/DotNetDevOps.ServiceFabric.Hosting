@@ -312,7 +312,7 @@ namespace DotNetDevOps.ServiceFabric.Hosting.IntegrationTest
         {
             var hostBuilder = new FabricHostBuilder(new string[0])
 
-                .ConfigureAppConfiguration((context, builder) =>
+                .ConfigureHostConfiguration((builder) =>
                 {
                     builder.AddInMemoryCollection(new[] { new KeyValuePair<string, string>("test", "test"), new KeyValuePair<string, string>("MySection:Test", "ConfigureExample") });
                 })

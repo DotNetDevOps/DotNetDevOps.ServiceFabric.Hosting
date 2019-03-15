@@ -47,7 +47,7 @@ namespace DotNetDevOps.ServiceFabric.Hosting
 
             var options = lifetimeScope.Resolve<IEnumerable<OptionRegistration>>();
             var ignores = new HashSet<Type>(options.Where(o => o.ShouldIgnore).ToLookup(k => k.ServiceType).Select(k => k.Key));
-         //   var include = options.Where(o => !o.ShouldIgnore).ToLookup(k => k.ServiceType).ToDictionary(k => k.Key);
+            var include = options.Where(o => !o.ShouldIgnore).ToLookup(k => k.ServiceType).ToDictionary(k => k.Key);
 
           //  var test = parent.GroupBy(k => k.ServiceType).Where(k => k.Count() > 1).ToArray();
 
@@ -164,14 +164,14 @@ namespace DotNetDevOps.ServiceFabric.Hosting
 
             }
 
-            //foreach (var option in include.SelectMany(k=>k.Value))
-            //{
-            //    if (option.ServiceLifetime == ServiceLifetime.Singleton)
-            //    {
-            //        serviceCollection.AddSingleton(option.ServiceType, sp => lifetimeScope.Resolve(option.ServiceType));
-            //    }
+            foreach (var option in options.Where(o => !o.ShouldIgnore && !ignores.Contains(o.ServiceType)))
+            {
+                if (option.ServiceLifetime == ServiceLifetime.Singleton)
+                {
+                    serviceCollection.AddSingleton(option.ServiceType, sp => lifetimeScope.Resolve(option.ServiceType));
+                }
 
-            //}
+            }
 
             return serviceCollection.BuildServiceProvider(new ServiceProviderOptions { ValidateScopes = true });
         }
