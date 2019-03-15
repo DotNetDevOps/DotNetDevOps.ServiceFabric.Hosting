@@ -46,9 +46,10 @@ namespace DotNetDevOps.ServiceFabric.Hosting
 
 
             var options = lifetimeScope.Resolve<IEnumerable<OptionRegistration>>();
-            var ignores = options.Where(o => o.ShouldIgnore).ToLookup(k => k.ServiceType);
+            var ignores = new HashSet<Type>(options.Where(o => o.ShouldIgnore).ToLookup(k => k.ServiceType).Select(k => k.Key));
+         //   var include = options.Where(o => !o.ShouldIgnore).ToLookup(k => k.ServiceType).ToDictionary(k => k.Key);
 
-            var test = parent.GroupBy(k => k.ServiceType).Where(k => k.Count() > 1).ToArray();
+          //  var test = parent.GroupBy(k => k.ServiceType).Where(k => k.Count() > 1).ToArray();
 
             foreach (var parentregistration in parent)
             {
@@ -67,6 +68,7 @@ namespace DotNetDevOps.ServiceFabric.Hosting
                 {
                     case ServiceLifetime.Singleton:
 
+                      
                         // if the parent has more singletons registed, register them seperatly.
                         {
                             IEnumerable registrations = null;
@@ -85,7 +87,9 @@ namespace DotNetDevOps.ServiceFabric.Hosting
 
                             if (count > 1)
                             {
-                                foreach (var instance in registrations)
+                                ignores.Add(parentregistration.ServiceType);
+
+                                foreach (var instance in   registrations.Cast<object>().Reverse())
                                 {
                                     serviceCollection.AddSingleton(parentregistration.ServiceType, instance);
                                 }
@@ -160,14 +164,14 @@ namespace DotNetDevOps.ServiceFabric.Hosting
 
             }
 
-            foreach (var option in options.Where(o => !o.ShouldIgnore))
-            {
-                if (option.ServiceLifetime == ServiceLifetime.Singleton)
-                {
-                    serviceCollection.AddSingleton(option.ServiceType, sp => lifetimeScope.Resolve(option.ServiceType));
-                }
+            //foreach (var option in include.SelectMany(k=>k.Value))
+            //{
+            //    if (option.ServiceLifetime == ServiceLifetime.Singleton)
+            //    {
+            //        serviceCollection.AddSingleton(option.ServiceType, sp => lifetimeScope.Resolve(option.ServiceType));
+            //    }
 
-            }
+            //}
 
             return serviceCollection.BuildServiceProvider(new ServiceProviderOptions { ValidateScopes = true });
         }
