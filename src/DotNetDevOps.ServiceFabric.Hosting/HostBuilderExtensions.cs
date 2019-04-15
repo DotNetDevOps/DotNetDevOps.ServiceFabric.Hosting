@@ -176,6 +176,7 @@ namespace DotNetDevOps.ServiceFabric.Hosting
             
         }
 
+
         
 
         public static IHostBuilder WithStatelessService<TStatelessService>(
@@ -191,6 +192,19 @@ namespace DotNetDevOps.ServiceFabric.Hosting
             });
             
         }
+
+        public static IServiceCollection WithStatefullService<TStatefulService>(
+           this IServiceCollection services,
+           string serviceTypeName,
+           Action<ContainerBuilder, StatefulServiceContext> scopedRegistrations = null,
+           TimeSpan timeout = default(TimeSpan), CancellationToken cancellationToken = default(CancellationToken)) where TStatefulService : StatefulService
+        {
+            
+               return services.AddSingleton<IHostedService>(sp => new StatefulServiceHost<TStatefulService>(serviceTypeName, sp, timeout, scopedRegistrations));
+          
+
+        }
+
         public static IHostBuilder WithStatefullService<TStatefulService>(
             this IHostBuilder host,
             string serviceTypeName,
