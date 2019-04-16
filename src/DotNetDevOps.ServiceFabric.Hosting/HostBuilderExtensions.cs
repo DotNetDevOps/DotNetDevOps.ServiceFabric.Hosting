@@ -125,6 +125,12 @@ namespace DotNetDevOps.ServiceFabric.Hosting
                 (servicecontainer, context, actorType, actorFactory) =>
                     new ActorService(context, actorTypeInfo: actorType, actorFactory: actorFactory, settings: settings));
         }
+        public static IServiceCollection WithActor<TActor>(this IServiceCollection services, ActorServiceSettings settings = null) where TActor : ActorBase
+        {
+            return services.WithActor<TActor, ActorService>(
+                (servicecontainer, context, actorType, actorFactory) =>
+                    new ActorService(context, actorTypeInfo: actorType, actorFactory: actorFactory, settings: settings));
+        }
         /// <summary>
         /// Add an actor implementation to the fabric container
         /// </summary>
@@ -139,13 +145,7 @@ namespace DotNetDevOps.ServiceFabric.Hosting
             where TActor : ActorBase
             where TActorService : ActorService
         {
-            //var logger = container.Resolve<ILoggerFactory>().CreateLogger<TActor>();
-            //logger.LogInformation("Registering Actor {ActorName}", typeof(TActor).Name);
-
-            //  container = container.IntializeScope();
-
-
-           
+            
 
             builder.ConfigureServices((ctx, services) =>
             {
@@ -157,13 +157,28 @@ namespace DotNetDevOps.ServiceFabric.Hosting
                     services.AddSingleton<IHostedService, ActorServiceHost<TActor, TActorService>>();
               
             });
-
-           
-
-
-
+             
             return builder;
         }
+        public static IServiceCollection WithActor<TActor, TActorService>(
+           this IServiceCollection services,
+           Func<ILifetimeScope, StatefulServiceContext, ActorTypeInformation, Func<ActorService, ActorId, TActor>, TActorService> ActorServiceFactory = null)
+           where TActor : ActorBase
+           where TActorService : ActorService
+        {
+
+
+       
+                if (ActorServiceFactory != null)
+                {
+                    services.AddSingleton(ActorServiceFactory);
+                }
+
+             return   services.AddSingleton<IHostedService, ActorServiceHost<TActor, TActorService>>();
+
+           
+        }
+
 
         public static IServiceCollection WithStatelessService<TStatelessService>(
             this IServiceCollection services,
